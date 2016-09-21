@@ -2843,7 +2843,7 @@ void tcp_xmit_retransmit_queue(struct sock *sk)
 		if (tcp_retransmit_skb(sk, skb, segs))
 			return;
 
-		NET_INC_STATS_BH(sock_net(sk), mib_idx);
+		NET_ADD_STATS(sock_net(sk), mib_idx, tcp_skb_pcount(skb));
 
 		if (tcp_in_cwnd_reduction(sk))
 			tp->prr_out += tcp_skb_pcount(skb);
