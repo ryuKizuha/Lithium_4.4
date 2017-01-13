@@ -2944,6 +2944,7 @@ void tcp_xmit_retransmit_queue(struct sock *sk)
 	u32 last_lost;
 	u32 max_segs;
 	u32 max_segs, last_lost;
+	u32 max_segs;
 	int mib_idx;
 
 	if (!tp->packets_out)
