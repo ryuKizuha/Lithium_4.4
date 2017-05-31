@@ -2963,9 +2963,9 @@ static void tcp_update_rtt_min(struct sock *sk, u32 rtt_us)
 	}
 }
 
-static inline bool tcp_ack_update_rtt(struct sock *sk, const int flag,
-				      long seq_rtt_us, long sack_rtt_us,
-				      long ca_rtt_us)
+static bool tcp_ack_update_rtt(struct sock *sk, const int flag,
+			       long seq_rtt_us, long sack_rtt_us,
+			       long ca_rtt_us, struct rate_sample *rs)
 {
 	const struct tcp_sock *tp = tcp_sk(sk);
 
@@ -2987,6 +2987,13 @@ static inline bool tcp_ack_update_rtt(struct sock *sk, const int flag,
 	    flag & FLAG_ACKED)
 		seq_rtt_us = ca_rtt_us = jiffies_to_usecs(tcp_time_stamp -
 							  tp->rx_opt.rcv_tsecr);
+	    flag & FLAG_ACKED) {
+		u32 delta = tcp_time_stamp(tp) - tp->rx_opt.rcv_tsecr;
+		u32 delta_us = delta * (USEC_PER_SEC / TCP_TS_HZ);
+
+		seq_rtt_us = ca_rtt_us = delta_us;
+	}
+	rs->rtt_us = ca_rtt_us; /* RTT of last (S)ACKed packet (or -1) */
 	if (seq_rtt_us < 0)
 		return false;
 
@@ -3006,6 +3013,7 @@ static inline bool tcp_ack_update_rtt(struct sock *sk, const int flag,
 /* Compute time elapsed between (last) SYNACK and the ACK completing 3WHS. */
 void tcp_synack_rtt_meas(struct sock *sk, struct request_sock *req)
 {
+	struct rate_sample rs;
 	long rtt_us = -1L;
 
 	if (req && !req->num_retrans && tcp_rsk(req)->snt_synack.v64) {
@@ -3015,7 +3023,7 @@ void tcp_synack_rtt_meas(struct sock *sk, struct request_sock *req)
 		rtt_us = skb_mstamp_us_delta(&now, &tcp_rsk(req)->snt_synack);
 	}
 
-	tcp_ack_update_rtt(sk, FLAG_SYN_ACKED, rtt_us, -1L, rtt_us);
+	tcp_ack_update_rtt(sk, FLAG_SYN_ACKED, rtt_us, -1L, rtt_us, &rs);
 }
 
 
@@ -3231,7 +3239,7 @@ static int tcp_clean_rtx_queue(struct sock *sk, int prior_fackets,
 	}
 
 	rtt_update = tcp_ack_update_rtt(sk, flag, seq_rtt_us, sack_rtt_us,
-					ca_rtt_us);
+					ca_rtt_us, sack->rate);
 
 	if (flag & FLAG_ACKED) {
 		tcp_rearm_rto(sk);
@@ -3276,6 +3284,13 @@ static int tcp_clean_rtx_queue(struct sock *sk, int prior_fackets,
 
 	if (icsk->icsk_ca_ops->pkts_acked)
 		icsk->icsk_ca_ops->pkts_acked(sk, pkts_acked, ca_rtt_us);
+	if (icsk->icsk_ca_ops->pkts_acked) {
+		struct ack_sample sample = { .pkts_acked = pkts_acked,
+					     .rtt_us = sack->rate->rtt_us,
+					     .in_flight = last_in_flight };
+
+		icsk->icsk_ca_ops->pkts_acked(sk, &sample);
+	}
 
 #if FASTRETRANS_DEBUG > 0
 	WARN_ON((int)tp->sacked_out < 0);
