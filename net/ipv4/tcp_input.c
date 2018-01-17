@@ -3698,6 +3698,12 @@ static int tcp_ack(struct sock *sk, const struct sk_buff *skb, int flag)
 	if (icsk->icsk_pending == ICSK_TIME_RETRANS)
 		tcp_schedule_loss_probe(sk);
 	tcp_update_pacing_rate(sk);
+	delivered = tp->delivered - delivered;	/* freshly ACKed or SACKed */
+	lost = tp->lost - lost;			/* freshly marked lost */
+	tcp_rate_gen(sk, delivered, lost, sack_state.rate);
+	rs.is_ack_delayed = !!(flag & FLAG_ACK_MAYBE_DELAYED);
+	tcp_cong_control(sk, ack, delivered, flag, sack_state.rate);
+	tcp_xmit_recovery(sk, rexmit);
 	return 1;
 
 no_queue:
