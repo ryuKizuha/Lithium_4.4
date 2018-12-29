@@ -138,10 +138,6 @@ static int one_hundred = 100;
 #ifdef CONFIG_PRINTK
 static int ten_thousand = 10000;
 #endif
-#ifdef CONFIG_SCHED_HMP
-static int one_thousand = 1000;
-static int max_freq_reporting_policy = FREQ_REPORT_INVALID_POLICY - 1;
-#endif
 
 /* this is needed for the proc_doulongvec_minmax of vm_dirty_bytes */
 static unsigned long dirty_bytes_min = 2 * PAGE_SIZE;
@@ -525,6 +521,7 @@ static struct ctl_table kern_table[] = {
 	},
 #endif	/* CONFIG_SCHED_HMP */
 #ifdef CONFIG_SCHED_SYSCTL
+#ifdef CONFIG_SCHED_DEBUG
 	{
 		.procname	= "sched_min_granularity_ns",
 		.data		= &sysctl_sched_min_granularity,
