@@ -136,6 +136,8 @@ struct inet_connection_sock {
 
 	u64			  icsk_ca_priv[64 / sizeof(u64)];
 #define ICSK_CA_PRIV_SIZE      (8 * sizeof(u64))
+	u64			  icsk_ca_priv[104 / sizeof(u64)];
+#define ICSK_CA_PRIV_SIZE      (13 * sizeof(u64))
 };
 
 #define ICSK_TIME_RETRANS	1	/* Retransmit timer */
