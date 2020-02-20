@@ -228,8 +228,8 @@ ifeq ($(CONFIG_KERNEL_CUSTOM_E7T),y)
 		sdm660-mtp.dtb
 else
 ifeq ($(CONFIG_KERNEL_CUSTOM_F7A),y)
-	dtb-$(CONFIG_ARCH_SDM660) += sdm660-mtp_f7a.dtb \
-		sdm660-mtp.dtb
+	dtb-$(CONFIG_ARCH_SDM660) += sdm660-mtp_f7a.dtb 
+	
 else
 ifeq ($(CONFIG_KERNEL_CUSTOM_D2S),y)
 	dtb-$(CONFIG_ARCH_SDM660) += sdm660-mtp_wayne.dtb \
