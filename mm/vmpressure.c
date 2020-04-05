@@ -377,13 +377,17 @@ void vmpressure_global(gfp_t gfp, unsigned long scanned,
  * This function does not return any value.
  */
 void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
-		unsigned long scanned, unsigned long reclaimed)
+		unsigned long scanned, unsigned long reclaimed, int order)
 {
 	if (!memcg)
 		vmpressure_global(gfp, scanned, reclaimed);
 
 	if (IS_ENABLED(CONFIG_MEMCG))
 		vmpressure_memcg(gfp, memcg, scanned, reclaimed);
+	if (order > PAGE_ALLOC_COSTLY_ORDER)
+		return;
+
+	__vmpressure(gfp, memcg, false, scanned, reclaimed);
 }
 
 /**
