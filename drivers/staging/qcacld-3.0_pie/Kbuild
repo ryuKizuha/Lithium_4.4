@@ -31,8 +31,8 @@ ifeq ($(KERNEL_BUILD),1)
 	# These are provided in external module based builds
 	# Need to explicitly define for Kernel-based builds
 	MODNAME := wlan
-	WLAN_ROOT := drivers/staging/qcacld-3.0
-	WLAN_COMMON_ROOT := ../qca-wifi-host-cmn
+	WLAN_ROOT := drivers/staging/qcacld-3.0_pie
+	WLAN_COMMON_ROOT := ../qca-wifi-host-cmn_pie
 	WLAN_COMMON_INC := $(WLAN_ROOT)/$(WLAN_COMMON_ROOT)
 endif
 
@@ -92,17 +92,6 @@ ifeq ($(KERNEL_BUILD), 0)
 	#Flag to enable Legacy Fast Roaming3(LFR3)
 	ifneq ($(CONFIG_ARCH_SDX20), y)
 	CONFIG_QCACLD_WLAN_LFR3 := y
-	endif
-
-	# JB kernel has CPU enablement patches, so enable
-	ifeq ($(CONFIG_ROME_IF),pci)
-		CONFIG_PRIMA_WLAN_11AC_HIGH_TP := y
-	endif
-	ifeq ($(CONFIG_ROME_IF),usb)
-		CONFIG_PRIMA_WLAN_11AC_HIGH_TP := n
-	endif
-	ifeq ($(CONFIG_ROME_IF),sdio)
-		CONFIG_PRIMA_WLAN_11AC_HIGH_TP := n
 	endif
 
 	ifneq ($(CONFIG_MOBILE_ROUTER), y)
@@ -186,7 +175,7 @@ ifeq ($(KERNEL_BUILD), 0)
 	CONFIG_MPC_UT_FRAMEWORK := y
 
 	#Flag to enable offload packets feature
-	CONFIG_WLAN_OFFLOAD_PACKETS := y
+	CONFIG_WLAN_OFFLOAD_PACKETS := n
 
 	#Flag to enable packet capture mode
 	CONFIG_WLAN_FEATURE_PKT_CAPTURE := y
@@ -199,6 +188,9 @@ ifeq ($(KERNEL_BUILD), 0)
 	CONFIG_WLAN_FEATURE_DSRC := y
 	endif
 
+#Flag to enable SAE
+CONFIG_WLAN_FEATURE_SAE := y
+
 ifneq ($(CONFIG_ROME_IF),sdio)
 	#Flag to enable DISA
 	CONFIG_WLAN_FEATURE_DISA := y
@@ -208,9 +200,6 @@ ifneq ($(CONFIG_ROME_IF),sdio)
 
 	#Flag to enable GMAC
 	CONFIG_WLAN_FEATURE_GMAC := y
-
-	#Flag to enable SAE
-	CONFIG_WLAN_FEATURE_SAE := y
 
 	#Flag to enable Fast Path feature
 	CONFIG_WLAN_FASTPATH := y
@@ -265,7 +254,7 @@ endif
 # builds. Other OEMs are also protected using the TARGET_BUILD_VARIANT
 # config.
 ifneq ($(TARGET_BUILD_VARIANT),user)
-	CONFIG_FEATURE_PKTLOG := y
+#	CONFIG_FEATURE_PKTLOG := y
 endif
 
 #enable spectral scan feature
@@ -275,17 +264,16 @@ CONFIG_WLAN_SPECTRAL_SCAN := y
 CONFIG_WLAN_FEATURE_APF := y
 
 #Enable WLAN/Power debugfs feature only if debug_fs is enabled
-ifeq ($(CONFIG_ANDROID), y)
+ifeq ($(CONFIG_DEBUG_FS), y)
        # Flag to enable debugfs. Depends on CONFIG_DEBUG_FS in kernel
        # configuration.
        CONFIG_WLAN_DEBUGFS := y
-       CFLAGS_wlan_hdd_debugfs.o += -DCONFIG_DEBUG_FS
 
        CONFIG_WLAN_POWER_DEBUGFS := y
 endif
 
 # If not set, assume, Common driver is with in the build tree
-WLAN_COMMON_ROOT ?= ../qca-wifi-host-cmn
+WLAN_COMMON_ROOT ?= ../qca-wifi-host-cmn_pie
 WLAN_COMMON_INC ?= $(WLAN_ROOT)/$(WLAN_COMMON_ROOT)
 
 ifeq ($(KERNEL_BUILD), 0)
@@ -1194,7 +1182,7 @@ ifeq ($(CONFIG_PLD_USB_CNSS), y)
 PLD_OBJS +=	$(PLD_SRC_DIR)/pld_usb.o
 endif
 
-TARGET_INC := -I$(WLAN_ROOT)/../fw-api/fw
+TARGET_INC := -I$(WLAN_ROOT)/../fw-api_pie/fw
 TARGET_IF_INC := -I$(WLAN_COMMON_INC)/target_if/core/inc
 
 LINUX_INC :=	-Iinclude
@@ -1293,6 +1281,7 @@ CDEFINES :=	-DANI_LITTLE_BYTE_ENDIAN \
 		-DANI_OS_TYPE_ANDROID=6 \
 		-DPTT_SOCK_SVC_ENABLE \
 		-Wall\
+		-Werror\
 		-D__linux__ \
 		-DHAL_SELF_STA_PER_BSS=1 \
 		-DFEATURE_WLAN_WAPI \
@@ -1329,7 +1318,7 @@ endif
 
 ifneq ($(CONFIG_HIF_USB), 1)
 ifeq ($(BUILD_DEBUG_VERSION), 1)
-CDEFINES += -DWLAN_LOGGING_SOCK_SVC_ENABLE
+#CDEFINES += -DWLAN_LOGGING_SOCK_SVC_ENABLE
 endif
 endif
 
@@ -1374,7 +1363,7 @@ CDEFINES +=	-DWLAN_FEATURE_FASTPATH
 endif
 
 ifeq ($(CONFIG_FEATURE_PKTLOG), y)
-CDEFINES +=     -DFEATURE_PKTLOG
+#CDEFINES +=     -DFEATURE_PKTLOG
 endif
 
 ifneq ($(CONFIG_ARCH_SDX20), y)
@@ -1414,7 +1403,7 @@ CDEFINES +=	-DWLAN_DEBUG \
 		-DLIM_TRACE_RECORD \
 		-DSME_TRACE_RECORD \
 		-DHDD_TRACE_RECORD \
-		-DPE_DEBUG_LOGW \
+#		-DPE_DEBUG_LOGW \
 		-DPE_DEBUG_LOGE
 endif
 
@@ -1482,9 +1471,6 @@ endif
 ifeq ($(CONFIG_WLAN_FEATURE_SAE),y)
 CDEFINES += -DWLAN_FEATURE_SAE
 endif
-# Enable object manager reference count debug infrastructure
-#cppflags-$(CONFIG_WLAN_OBJMGR_DEBUG) += -DWLAN_OBJMGR_DEBUG
-#cppflags-$(CONFIG_WLAN_OBJMGR_DEBUG) += -DWLAN_OBJMGR_REF_ID_DEBUG
 
 ifeq ($(CONFIG_WLAN_BEACON_REPORTING),y)
 CDEFINES += -DNTH_BEACON_OFFLOAD
@@ -1512,24 +1498,6 @@ endif
 ifeq ($(CONFIG_WLAN_FEATURE_11W),y)
 CDEFINES += -DWLAN_FEATURE_11W
 endif
-cppflags-$(CONFIG_QCA_SUPPORT_TXRX_DRIVER_TCP_DEL_ACK) += -DQCA_SUPPORT_TXRX_DRIVER_TCP_DEL_ACK
-
-cppflags-$(CONFIG_WLAN_FEATURE_11W) += -DWLAN_FEATURE_11W
-
-cppflags-$(CONFIG_QCA_TXDESC_SANITY_CHECKS) += -DQCA_SUPPORT_TXDESC_SANITY_CHECKS
-
-cppflags-$(CONFIG_QCOM_LTE_COEX) += -DFEATURE_WLAN_CH_AVOID
-
-cppflags-$(CONFIG_WLAN_FEATURE_LPSS) += -DWLAN_FEATURE_LPSS
-
-#cppflags-$(CONFIG_DESC_DUP_DETECT_DEBUG) += -DDESC_DUP_DETECT_DEBUG
-#cppflags-$(CONFIG_DEBUG_RX_RING_BUFFER) += -DDEBUG_RX_RING_BUFFER
-
-#cppflags-$(CONFIG_DESC_TIMESTAMP_DEBUG_INFO) += -DDESC_TIMESTAMP_DEBUG_INFO
-
-cppflags-$(PANIC_ON_BUG) += -DPANIC_ON_BUG
-
-cppflags-$(WLAN_WARN_ON_ASSERT) += -DWLAN_WARN_ON_ASSERT
 
 ifeq ($(CONFIG_QCA_TXDESC_SANITY_CHECKS), 1)
 CDEFINES += -DQCA_SUPPORT_TXDESC_SANITY_CHECKS
@@ -1544,8 +1512,8 @@ CDEFINES += -DWLAN_FEATURE_LPSS
 endif
 
 ifneq ($(TARGET_BUILD_VARIANT),user)
-CDEFINES += -DDESC_DUP_DETECT_DEBUG
-CDEFINES += -DDEBUG_RX_RING_BUFFER
+#CDEFINES += -DDESC_DUP_DETECT_DEBUG
+#CDEFINES += -DDEBUG_RX_RING_BUFFER
 endif
 
 ifeq ($(PANIC_ON_BUG),1)
@@ -1616,7 +1584,7 @@ CDEFINES += -DCONFIG_HL_SUPPORT \
             -DCONFIG_ATH_PROCFS_DIAG_SUPPORT \
             -DFEATURE_HL_GROUP_CREDIT_FLOW_CONTROL \
             -DHIF_MBOX_SLEEP_WAR \
-            -DDEBUG_HL_LOGGING \
+#            -DDEBUG_HL_LOGGING \
             -DQCA_BAD_PEER_TX_FLOW_CL \
             -DCONFIG_TX_DESC_HI_PRIO_RESERVE \
             -DCONFIG_PER_VDEV_TX_DESC_POOL \
@@ -1831,191 +1799,6 @@ endif
 #Enable/disable secure firmware feature
 ifeq ($(CONFIG_FEATURE_SECURE_FIRMWARE), 1)
 CDEFINES += -DFEATURE_SECURE_FIRMWARE
-cppflags-$(CONFIG_FEATURE_SECURE_FIRMWARE) += -DFEATURE_SECURE_FIRMWARE
-
-cppflags-$(CONFIG_ATH_PCIE_ACCESS_DEBUG) += -DCONFIG_ATH_PCIE_ACCESS_DEBUG
-
-# Enable feature support for Linux version QCMBR
-cppflags-$(CONFIG_LINUX_QCMBR) += -DLINUX_QCMBR
-
-# Enable feature sync tsf between multi devices
-cppflags-$(CONFIG_WLAN_SYNC_TSF) += -DWLAN_FEATURE_TSF
-cppflags-$(CONFIG_WLAN_SYNC_TSF_PLUS) += -DWLAN_FEATURE_TSF_PLUS
-# Enable feature sync tsf for chips based on Adrastea arch
-cppflags-$(CONFIG_WLAN_SYNC_TSF_PLUS_NOIRQ) += -DWLAN_FEATURE_TSF_PLUS_NOIRQ
-
-cppflags-$(CONFIG_ATH_PROCFS_DIAG_SUPPORT) += -DCONFIG_ATH_PROCFS_DIAG_SUPPORT
-
-cppflags-$(CONFIG_HELIUMPLUS) += -DHELIUMPLUS
-cppflags-$(CONFIG_RX_OL) += -DRECEIVE_OFFLOAD
-cppflags-$(CONFIG_TX_TID_OVERRIDE) += -DATH_TX_PRI_OVERRIDE
-cppflags-$(CONFIG_AR900B) += -DAR900B
-cppflags-$(CONFIG_HTT_PADDR64) += -DHTT_PADDR64
-cppflags-$(CONFIG_OL_RX_INDICATION_RECORD) += -DOL_RX_INDICATION_RECORD
-#cppflags-$(CONFIG_TSOSEG_DEBUG) += -DTSOSEG_DEBUG
-cppflags-$(CONFIG_ALLOW_PKT_DROPPING) += -DFEATURE_ALLOW_PKT_DROPPING
-
-cppflags-$(CONFIG_ENABLE_DEBUG_ADDRESS_MARKING) += -DENABLE_DEBUG_ADDRESS_MARKING
-cppflags-$(CONFIG_FEATURE_TSO) += -DFEATURE_TSO
-#cppflags-$(CONFIG_FEATURE_TSO_DEBUG) += -DFEATURE_TSO_DEBUG
-#cppflags-$(CONFIG_FEATURE_TSO_STATS) += -DFEATURE_TSO_STATS
-cppflags-$(CONFIG_FEATURE_FORCE_WAKE) += -DFORCE_WAKE
-cppflags-$(CONFIG_WLAN_LRO) += -DFEATURE_LRO
-
-cppflags-$(CONFIG_FEATURE_AP_MCC_CH_AVOIDANCE) += -DFEATURE_AP_MCC_CH_AVOIDANCE
-
-cppflags-$(CONFIG_MPC_UT_FRAMEWORK) += -DMPC_UT_FRAMEWORK
-
-cppflags-$(CONFIG_FEATURE_EPPING) += -DWLAN_FEATURE_EPPING
-
-cppflags-$(CONFIG_WLAN_OFFLOAD_PACKETS) += -DWLAN_FEATURE_OFFLOAD_PACKETS
-
-cppflags-$(CONFIG_WLAN_FEATURE_DISA) += -DWLAN_FEATURE_DISA
-
-cppflags-$(CONFIG_WLAN_FEATURE_ACTION_OUI) += -DWLAN_FEATURE_ACTION_OUI
-
-cppflags-$(CONFIG_WLAN_FEATURE_FIPS) += -DWLAN_FEATURE_FIPS
-
-cppflags-$(CONFIG_LFR_SUBNET_DETECTION) += -DFEATURE_LFR_SUBNET_DETECTION
-
-cppflags-$(CONFIG_MCC_TO_SCC_SWITCH) += -DFEATURE_WLAN_MCC_TO_SCC_SWITCH
-
-cppflags-$(CONFIG_FEATURE_WLAN_D0WOW) += -DFEATURE_WLAN_D0WOW
-
-cppflags-$(CONFIG_WLAN_FEATURE_PKT_CAPTURE) += -DWLAN_FEATURE_PKT_CAPTURE
-
-cppflags-$(CONFIG_QCA_WIFI_NAPIER_EMULATION) += -DQCA_WIFI_NAPIER_EMULATION
-cppflags-$(CONFIG_SHADOW_V2) += -DCONFIG_SHADOW_V2
-cppflags-$(CONFIG_QCA6290_HEADERS_DEF) += -DQCA6290_HEADERS_DEF
-cppflags-$(CONFIG_QCA_WIFI_QCA6290) += -DQCA_WIFI_QCA6290
-cppflags-$(CONFIG_QCA6390_HEADERS_DEF) += -DQCA6390_HEADERS_DEF
-cppflags-$(CONFIG_QCA6750_HEADERS_DEF) += -DQCA6750_HEADERS_DEF
-cppflags-$(CONFIG_QCA_WIFI_QCA6390) += -DQCA_WIFI_QCA6390
-cppflags-$(CONFIG_QCA6490_HEADERS_DEF) += -DQCA6490_HEADERS_DEF
-cppflags-$(CONFIG_QCA_WIFI_QCA6490) += -DQCA_WIFI_QCA6490
-cppflags-$(CONFIG_QCA_WIFI_QCA6750) += -DQCA_WIFI_QCA6750
-cppflags-$(CONFIG_QCA_WIFI_QCA8074) += -DQCA_WIFI_QCA8074
-cppflags-$(CONFIG_SCALE_INCLUDES) += -DSCALE_INCLUDES
-cppflags-$(CONFIG_QCA_WIFI_QCA8074_VP) += -DQCA_WIFI_QCA8074_VP
-cppflags-$(CONFIG_DP_INTR_POLL_BASED) += -DDP_INTR_POLL_BASED
-cppflags-$(CONFIG_TX_PER_PDEV_DESC_POOL) += -DTX_PER_PDEV_DESC_POOL
-cppflags-$(CONFIG_DP_TRACE) += -DCONFIG_DP_TRACE
-cppflags-$(CONFIG_FEATURE_TSO) += -DFEATURE_TSO
-#cppflags-$(CONFIG_TSO_DEBUG_LOG_ENABLE) += -DTSO_DEBUG_LOG_ENABLE
-cppflags-$(CONFIG_DP_LFR) += -DDP_LFR
-cppflags-$(CONFIG_DUP_RX_DESC_WAR) += -DDUP_RX_DESC_WAR
-cppflags-$(CONFIG_DP_TXRX_SOC_ATTACH) += -DDP_TXRX_SOC_ATTACH
-cppflags-$(CONFIG_HTT_PADDR64) += -DHTT_PADDR64
-cppflags-$(CONFIG_WLAN_FEATURE_BMI) += -DWLAN_FEATURE_BMI
-cppflags-$(CONFIG_QCA_TX_PADDING_CREDIT_SUPPORT) += -DQCA_TX_PADDING_CREDIT_SUPPORT
-cppflags-$(CONFIG_QCN7605_SUPPORT) += -DQCN7605_SUPPORT -DPLATFORM_GENOA
-cppflags-$(CONFIG_HIF_REG_WINDOW_SUPPORT) += -DHIF_REG_WINDOW_SUPPORT
-cppflags-$(CONFIG_WLAN_ALLOCATE_GLOBAL_BUFFERS_DYNAMICALLY) += -DWLAN_ALLOCATE_GLOBAL_BUFFERS_DYNAMICALLY
-#cppflags-$(CONFIG_HIF_CE_DEBUG_DATA_BUF) += -DHIF_CE_DEBUG_DATA_BUF
-cppflags-$(CONFIG_IPA_DISABLE_OVERRIDE) += -DIPA_DISABLE_OVERRIDE
-ccflags-$(CONFIG_QCA_LL_TX_FLOW_CONTROL_RESIZE) += -DQCA_LL_TX_FLOW_CONTROL_RESIZE
-ccflags-$(CONFIG_HIF_PCI) += -DCE_SVC_CMN_INIT
-ccflags-$(CONFIG_HIF_IPCI) += -DCE_SVC_CMN_INIT
-ccflags-$(CONFIG_HIF_SNOC) += -DCE_SVC_CMN_INIT
-cppflags-$(CONFIG_RX_DESC_SANITY_WAR) += -DRX_DESC_SANITY_WAR
-cppflags-$(CONFIG_DYNAMIC_RX_AGGREGATION) += -DWLAN_FEATURE_DYNAMIC_RX_AGGREGATION
-
-ifeq ($(CONFIG_QCA6290_11AX), y)
-cppflags-y += -DQCA_WIFI_QCA6290_11AX -DQCA_WIFI_QCA6290_11AX_MU_UL
-endif
-
-ifeq ($(CONFIG_LITHIUM), y)
-cppflags-$(CONFIG_WLAN_TX_FLOW_CONTROL_V2) += -DQCA_AC_BASED_FLOW_CONTROL
-cppflags-y += -DHAL_DISABLE_NON_BA_2K_JUMP_ERROR
-cppflags-y += -DENABLE_HAL_SOC_STATS
-cppflags-y += -DENABLE_HAL_REG_WR_HISTORY
-cppflags-y += -DDP_RX_DESC_COOKIE_INVALIDATE
-endif
-
-cppflags-$(CONFIG_WLAN_CLD_PM_QOS) += -DCLD_PM_QOS
-cppflags-$(CONFIG_REO_DESC_DEFER_FREE) += -DREO_DESC_DEFER_FREE
-cppflags-$(CONFIG_WLAN_FEATURE_11AX) += -DWLAN_FEATURE_11AX
-cppflags-$(CONFIG_WLAN_FEATURE_11AX) += -DWLAN_FEATURE_11AX_BSS_COLOR
-cppflags-$(CONFIG_WLAN_FEATURE_11AX) += -DSUPPORT_11AX_D3
-cppflags-$(CONFIG_RXDMA_ERR_PKT_DROP) += -DRXDMA_ERR_PKT_DROP
-cppflags-$(CONFIG_MAX_ALLOC_PAGE_SIZE) += -DMAX_ALLOC_PAGE_SIZE
-cppflags-$(CONFIG_DELIVERY_TO_STACK_STATUS_CHECK) += -DDELIVERY_TO_STACK_STATUS_CHECK
-cppflags-$(CONFIG_WLAN_TRACE_HIDE_MAC_ADDRESS) += -DWLAN_TRACE_HIDE_MAC_ADDRESS
-
-cppflags-$(CONFIG_LITHIUM) += -DFEATURE_AST
-cppflags-$(CONFIG_LITHIUM) += -DPEER_PROTECTED_ACCESS
-cppflags-$(CONFIG_LITHIUM) += -DSERIALIZE_QUEUE_SETUP
-cppflags-$(CONFIG_LITHIUM) += -DDP_RX_PKT_NO_PEER_DELIVER
-cppflags-$(CONFIG_LITHIUM) += -DDP_RX_DROP_RAW_FRM
-cppflags-$(CONFIG_LITHIUM) += -DFEATURE_ALIGN_STATS_FROM_DP
-cppflags-$(CONFIG_LITHIUM) += -DDP_RX_SPECIAL_FRAME_NEED
-cppflags-$(CONFIG_LITHIUM) += -DFEATURE_STATS_EXT_V2
-#cppflags-$(CONFIG_VERBOSE_DEBUG) += -DENABLE_VERBOSE_DEBUG
-#cppflags-$(CONFIG_RX_DESC_DEBUG_CHECK) += -DRX_DESC_DEBUG_CHECK
-#cppflags-$(CONFIG_REGISTER_OP_DEBUG) += -DHAL_REGISTER_WRITE_DEBUG
-#cppflags-$(CONFIG_ENABLE_QDF_PTR_HASH_DEBUG) += -DENABLE_QDF_PTR_HASH_DEBUG
-#Enable STATE MACHINE HISTORY
-cppflags-$(CONFIG_SM_ENG_HIST) += -DSM_ENG_HIST_ENABLE
-cppflags-$(CONFIG_FEATURE_VDEV_RSP_WAKELOCK) += -DFEATURE_VDEV_RSP_WAKELOCK
-
-# Vendor Commands
-cppflags-$(CONFIG_FEATURE_RSSI_MONITOR) += -DFEATURE_RSSI_MONITOR
-cppflags-$(CONFIG_FEATURE_BSS_TRANSITION) += -DFEATURE_BSS_TRANSITION
-cppflags-$(CONFIG_FEATURE_STATION_INFO) += -DFEATURE_STATION_INFO
-cppflags-$(CONFIG_FEATURE_TX_POWER) += -DFEATURE_TX_POWER
-cppflags-$(CONFIG_FEATURE_OTA_TEST) += -DFEATURE_OTA_TEST
-cppflags-$(CONFIG_FEATURE_ACTIVE_TOS) += -DFEATURE_ACTIVE_TOS
-cppflags-$(CONFIG_FEATURE_SAR_LIMITS) += -DFEATURE_SAR_LIMITS
-cppflags-$(CONFIG_FEATURE_CONCURRENCY_MATRIX) += -DFEATURE_CONCURRENCY_MATRIX
-cppflags-$(CONFIG_FEATURE_SAP_COND_CHAN_SWITCH) += -DFEATURE_SAP_COND_CHAN_SWITCH
-
-#if converged p2p is enabled
-ifeq ($(CONFIG_CONVERGED_P2P_ENABLE), y)
-cppflags-$(CONFIG_FEATURE_P2P_LISTEN_OFFLOAD) += -DFEATURE_P2P_LISTEN_OFFLOAD
-endif
-
-#Enable support to get ANI value
-ifeq ($(CONFIG_ANI_LEVEL_REQUEST), y)
-cppflags-y += -DFEATURE_ANI_LEVEL_REQUEST
-endif
-
-#Flags to enable/disable WMI APIs
-cppflags-$(CONFIG_WMI_ROAM_SUPPORT) += -DWMI_ROAM_SUPPORT
-cppflags-$(CONFIG_WMI_CONCURRENCY_SUPPORT) += -DWMI_CONCURRENCY_SUPPORT
-cppflags-$(CONFIG_WMI_STA_SUPPORT) += -DWMI_STA_SUPPORT
-
-cppflags-y += -DWMI_MULTI_MAC_SVC
-
-# Dummy flag for WIN/MCL converged data path compilation
-cppflags-y += -DDP_PRINT_ENABLE=0
-cppflags-y += -DATH_SUPPORT_WRAP=0
-cppflags-y += -DQCA_HOST2FW_RXBUF_RING
-cppflags-y += -DDP_FLOW_CTL
-cppflags-y += -DDP_PEER_EXTENDED_API
-cppflags-y += -DDP_POWER_SAVE
-cppflags-y += -DDP_CON_MON
-cppflags-y += -DDP_MOB_DEFS
-cppflags-y += -DDP_PRINT_NO_CONSOLE
-cppflags-y += -DDP_INTR_POLL_BOTH
-cppflags-y += -DDP_INVALID_PEER_ASSERT
-
-ifdef CONFIG_HIF_LARGE_CE_RING_HISTORY
-ccflags-y += -DHIF_CE_HISTORY_MAX=$(CONFIG_HIF_LARGE_CE_RING_HISTORY)
-endif
-
-cppflags-$(CONFIG_WLAN_HANG_EVENT) += -DHIF_CE_LOG_INFO
-cppflags-$(CONFIG_WLAN_HANG_EVENT) += -DDP_SUPPORT_RECOVERY_NOTIFY
-#endof dummy flags
-
-ccflags-$(CONFIG_ENABLE_SIZE_OPTIMIZE) += -Os
-
-# DFS component
-cppflags-$(CONFIG_WLAN_DFS_STATIC_MEM_ALLOC) += -DWLAN_DFS_STATIC_MEM_ALLOC
-cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DQCA_MCL_DFS_SUPPORT
-ifeq ($(CONFIG_WLAN_FEATURE_DFS_OFFLOAD), y)
-cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DWLAN_DFS_FULL_OFFLOAD
-else
-cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DWLAN_DFS_PARTIAL_OFFLOAD
 endif
 
 ifeq ($(CONFIG_ATH_PCIE_ACCESS_DEBUG), 1)
@@ -2056,7 +1839,7 @@ ifeq (y,$(filter y,$(CONFIG_CNSS_EOS) $(CONFIG_ICNSS)))
 CONFIG_HELIUMPLUS := y
 CONFIG_64BIT_PADDR := y
 CONFIG_FEATURE_TSO := y
-CONFIG_FEATURE_TSO_DEBUG := y
+CONFIG_FEATURE_TSO_DEBUG := n
 ifneq ($(CONFIG_FORCE_ALLOC_FROM_DMA_ZONE), y)
 CONFIG_ENABLE_DEBUG_ADDRESS_MARKING := y
 endif
@@ -2183,8 +1966,9 @@ ifeq ($(call cc-option-yn, -Wheader-guard),y)
 EXTRA_CFLAGS += -Wheader-guard
 endif
 
-EXTRA_CFLAGS += $(call cc-option, -g0)
-EXTRA_CFLAGS += $(call cc-option, -Os)
+# To build without debug just ignore not used code.
+EXTRA_CFLAGS += $(call cc-disable-warning,unused-variable,)
+EXTRA_CFLAGS += $(call cc-disable-warning,unused-function,)
 
 # If the module name is not "wlan", then the define MULTI_IF_NAME to be the
 # same a the QCA CHIP name. The host driver will then append MULTI_IF_NAME to
@@ -2205,26 +1989,29 @@ ifdef WLAN_HDD_ADAPTER_MAGIC
 CDEFINES += -DWLAN_HDD_ADAPTER_MAGIC=$(WLAN_HDD_ADAPTER_MAGIC)
 endif
 
+EXTRA_CFLAGS += $(call cc-option, -g0)
+EXTRA_CFLAGS += $(call cc-option, -Os)
+
 # inject some build related information
-ifeq ($(CONFIG_BUILD_TAG), y)
-CLD_CHECKOUT = $(shell cd "$(WLAN_ROOT)" && \
-	git reflog | grep -vm1 cherry-pick | grep -oE ^[0-f]+)
-CLD_IDS = $(shell cd "$(WLAN_ROOT)" && \
-	git log $(CLD_CHECKOUT)~..HEAD | \
-		sed -nE 's/^\s*Change-Id: (I[0-f]{10})[0-f]{30}\s*$$/\1/p' | \
-		paste -sd "," -)
-
-CMN_CHECKOUT = $(shell cd "$(WLAN_COMMON_INC)" && \
-	git reflog | grep -vm1 cherry-pick | grep -oE ^[0-f]+)
-CMN_IDS = $(shell cd "$(WLAN_COMMON_INC)" && \
-	git log $(CMN_CHECKOUT)~..HEAD | \
-		sed -nE 's/^\s*Change-Id: (I[0-f]{10})[0-f]{30}\s*$$/\1/p' | \
-		paste -sd "," -)
-
-TIMESTAMP = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
-BUILD_TAG = "$(TIMESTAMP); cld:$(CLD_IDS); cmn:$(CMN_IDS);"
-CDEFINES += -DBUILD_TAG=\"$(BUILD_TAG)\"
-endif
+#ifeq ($(CONFIG_BUILD_TAG), y)
+#CLD_CHECKOUT = $(shell cd "$(WLAN_ROOT)" && \
+#	git reflog | grep -vm1 cherry-pick | grep -oE ^[0-f]+)
+#CLD_IDS = $(shell cd "$(WLAN_ROOT)" && \
+#	git log $(CLD_CHECKOUT)~..HEAD | \
+#		sed -nE 's/^\s*Change-Id: (I[0-f]{10})[0-f]{30}\s*$$/\1/p' | \
+#		paste -sd "," -)
+#
+#CMN_CHECKOUT = $(shell cd "$(WLAN_COMMON_INC)" && \
+#	git reflog | grep -vm1 cherry-pick | grep -oE ^[0-f]+)
+#CMN_IDS = $(shell cd "$(WLAN_COMMON_INC)" && \
+#	git log $(CMN_CHECKOUT)~..HEAD | \
+#		sed -nE 's/^\s*Change-Id: (I[0-f]{10})[0-f]{30}\s*$$/\1/p' | \
+#		paste -sd "," -)
+#
+#TIMESTAMP = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+#BUILD_TAG = "$(TIMESTAMP); cld:$(CLD_IDS); cmn:$(CMN_IDS);"
+#CDEFINES += -DBUILD_TAG=\"$(BUILD_TAG)\"
+#endif
 
 # Module information used by KBuild framework
 obj-$(CONFIG_QCA_CLD_WLAN) += $(MODNAME).o
