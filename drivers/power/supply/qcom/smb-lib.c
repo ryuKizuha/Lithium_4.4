@@ -64,6 +64,7 @@ extern int hwc_check_global;
 #else
 #define smblib_dbg(chg, reason, fmt, ...) do {} while (0)
 #endif
+	do { } while (0)
 
 static bool is_secure(struct smb_charger *chg, int addr)
 {
