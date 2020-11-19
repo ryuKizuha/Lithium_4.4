@@ -3145,6 +3145,20 @@ static void __hdd_set_multicast_list(struct net_device *dev)
 		netdev_for_each_mc_addr(ha, dev) {
 			hdd_debug("ha_addr[%d] "MAC_ADDRESS_STR,
 				i, MAC_ADDR_ARRAY(ha->addr));
+		/*
+		 * Call this function before hdd_enable_power_management. Since
+		 * it is required to trigger WMI_PDEV_DMA_RING_CFG_REQ_CMDID
+		 * to FW when power save isn't enable.
+		 */
+		hdd_spectral_register_to_dbr(hdd_ctx);
+
+#ifdef WLAN_POWER_DEBUG
+		hdd_sysfs_create_driver_root_obj();
+#endif
+		hdd_sysfs_create_version_interface(hdd_ctx->psoc);
+		hdd_sysfs_create_powerstats_interface();
+		hdd_sysfs_dp_aggregation_create();
+		hdd_update_hw_sw_info(hdd_ctx);
 
 			if (i == mc_count)
 				break;
@@ -3173,6 +3187,56 @@ static void __hdd_set_multicast_list(struct net_device *dev)
 			       MAC_ADDR_ARRAY(adapter->mc_addr_list.addr[i]));
 			i++;
 		}
+
+		hdd_enable_power_management();
+
+		hdd_skip_acs_scan_timer_init(hdd_ctx);
+
+		wlan_hdd_init_tx_rx_histogram(hdd_ctx);
+
+		hdd_set_hif_init_phase(hif_ctx, false);
+
+		break;
+
+	default:
+		QDF_DEBUG_PANIC("Unknown driver state:%d",
+				hdd_ctx->driver_status);
+		ret = -EINVAL;
+		goto release_lock;
+	}
+
+	hdd_ctx->driver_status = DRIVER_MODULES_ENABLED;
+	hdd_nofl_debug("Wlan transitioned (now ENABLED)");
+
+	hdd_exit();
+
+	return 0;
+
+destroy_driver_sysfs:
+	hdd_sysfs_dp_aggregation_destroy();
+	hdd_sysfs_destroy_powerstats_interface();
+	hdd_sysfs_destroy_version_interface();
+#ifdef WLAN_POWER_DEBUG
+	hdd_sysfs_destroy_driver_root_obj();
+#endif
+	cds_post_disable();
+
+unregister_notifiers:
+	hdd_unregister_notifiers(hdd_ctx);
+
+deregister_cb:
+	hdd_deregister_cb(hdd_ctx);
+
+cds_txrx_free:
+
+	tgt_hdl = wlan_psoc_get_tgt_if_handle(hdd_ctx->psoc);
+
+	if (tgt_hdl && target_psoc_get_wmi_ready(tgt_hdl))
+		hdd_runtime_suspend_context_deinit(hdd_ctx);
+
+	if (hdd_ctx->pdev) {
+		dispatcher_pdev_close(hdd_ctx->pdev);
+		hdd_objmgr_release_and_destroy_pdev(hdd_ctx);
 	}
 	if (hdd_ctx->config->active_mode_offload) {
 		hdd_debug("enable mc filtering");
@@ -9795,6 +9859,13 @@ static int hdd_init_thermal_info(hdd_context_t *hdd_ctx)
 					   hdd_set_thermal_level_cb);
 
 	return 0;
+	hdd_sysfs_dp_aggregation_destroy();
+	hdd_sysfs_destroy_powerstats_interface();
+	hdd_sysfs_destroy_version_interface();
+#ifdef WLAN_POWER_DEBUG
+	hdd_sysfs_destroy_driver_root_obj();
+#endif
+	hdd_debug("Closing CDS modules!");
 
 }
 
