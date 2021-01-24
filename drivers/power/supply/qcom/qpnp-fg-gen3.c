@@ -654,15 +654,15 @@ static int fg_get_battery_temp(struct fg_chip *chip, int *val)
 			BATT_INFO_BATT_TEMP_LSB(chip), rc);
 		return rc;
 	}
-		pr_err("addr=0x%04x,buf1=%04x buf0=%04x\n",
-			BATT_INFO_BATT_TEMP_LSB(chip),buf[1],buf[0]);
+	pr_debug("addr=0x%04x,buf1=%04x buf0=%04x\n",
+		BATT_INFO_BATT_TEMP_LSB(chip),buf[1],buf[0]);
 	temp = ((buf[1] & BATT_TEMP_MSB_MASK) << 8) |
 		(buf[0] & BATT_TEMP_LSB_MASK);
 	temp = DIV_ROUND_CLOSEST(temp, 4);
 
 	/* Value is in Kelvin; Convert it to deciDegC */
 	temp = (temp - 273) * 10;
-		pr_err("LCT TEMP=%d\n",temp);
+	pr_debug("LCT TEMP=%d\n",temp);
 
 #if defined(CONFIG_KERNEL_CUSTOM_E7T)	
 	if (temp < -40){
@@ -1153,6 +1153,13 @@ static int fg_get_batt_profile(struct fg_chip *chip)
 		chip->bp.vbatt_full_mv = -EINVAL;
 	}
 
+	rc = of_property_read_u32(profile_node, "qcom,nom-batt-capacity-mah",
+			&chip->bp.nom_cap_uah);
+	if (rc < 0) {
+		pr_err("battery nominal capacity unavailable, rc:%d\n", rc);
+		chip->bp.nom_cap_uah = -EINVAL;
+	}
+
 	data = of_get_property(profile_node, "qcom,fg-profile-data", &len);
 	if (!data) {
 		pr_err("No profile data available\n");
@@ -1474,6 +1481,7 @@ static int fg_load_learned_cap_from_sram(struct fg_chip *chip)
 	}
 
 	chip->cl.learned_cc_uah = act_cap_mah * 1000;
+	chip->cl.learned_cc_uah = (chip->cl.learned_cc_uah > 4000000) ? chip->cl.learned_cc_uah : 4000000;
 
 	if (chip->cl.learned_cc_uah != chip->cl.nom_cap_uah) {
 		if (chip->cl.learned_cc_uah == 0)
@@ -3362,7 +3370,7 @@ module_param_cb(restart, &fg_restart_ops, &fg_restart, 0644);
 static int fg_get_time_to_full_locked(struct fg_chip *chip, int *val)
 {
 	int rc, ibatt_avg, vbatt_avg, rbatt, msoc, full_soc, act_cap_mah,
-		i_cc2cv, soc_cc2cv, tau, divisor, iterm, ttf_mode,
+		i_cc2cv = 0, soc_cc2cv, tau, divisor, iterm, ttf_mode,
 		i, soc_per_step, msoc_this_step, msoc_next_step,
 		ibatt_this_step, t_predicted_this_step, ttf_slope,
 		t_predicted_cv, t_predicted = 0;
@@ -3427,8 +3435,13 @@ static int fg_get_time_to_full_locked(struct fg_chip *chip, int *val)
 	vbatt_avg /= MILLI_UNIT;
 
 	/* clamp ibatt_avg to iterm */
-	if (ibatt_avg < abs(chip->dt.sys_term_curr_ma))
-		ibatt_avg = abs(chip->dt.sys_term_curr_ma);
+	if ((msoc > 70) && (msoc <= 90)) {
+		if (ibatt_avg < 1000)
+			ibatt_avg = 1000; /* force consistent minumum charging current 1000mA upto 90% battery */
+	} else {
+		if (ibatt_avg < abs(chip->dt.sys_term_curr_ma))
+			ibatt_avg = abs(chip->dt.sys_term_curr_ma);
+	}
 
 	fg_dbg(chip, FG_TTF, "ibatt_avg=%d\n", ibatt_avg);
 	fg_dbg(chip, FG_TTF, "vbatt_avg=%d\n", vbatt_avg);
@@ -3947,7 +3960,10 @@ static int fg_psy_get_property(struct power_supply *psy,
 		rc = fg_get_sram_prop(chip, FG_SRAM_OCV, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
-		pval->intval = chip->cl.nom_cap_uah;
+		if (-EINVAL != chip->bp.nom_cap_uah)
+			pval->intval = chip->bp.nom_cap_uah * 1000;
+		else
+			pval->intval = chip->cl.nom_cap_uah;
 		break;
 	case POWER_SUPPLY_PROP_RESISTANCE_ID:
 		pval->intval = chip->batt_id_ohms;
@@ -4008,9 +4024,6 @@ static int fg_psy_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CC_STEP_SEL:
 		pval->intval = chip->ttf.cc_step.sel;
 		break;
-	case POWER_SUPPLY_PROP_FG_RESET_CLOCK:
-		pval->intval = 0;
-		break;
 #if defined(CONFIG_KERNEL_CUSTOM_E7T)
 	case POWER_SUPPLY_PROP_FG_RESET_CLOCK:
 		pval->intval = 0;
@@ -4049,29 +4062,6 @@ static int fg_bcl_reset(struct fg_chip *chip)
 		return rc;
 	}
 
-#define BCL_RESET_RETRY_COUNT 4
-static int fg_bcl_reset(struct fg_chip *chip)
-{
-	int i, ret, rc = 0;
-	u8 val, peek_mux;
-	bool success = false;
-
-	/* Read initial value of peek mux1 */
-	rc = fg_read(chip, BATT_INFO_PEEK_MUX1(chip), &peek_mux, 1);
-	if (rc < 0) {
-		pr_err("Error in writing peek mux1, rc=%d\n", rc);
-		return rc;
-	}
-
-	val = 0x83;
-	rc = fg_write(chip, BATT_INFO_PEEK_MUX1(chip), &val, 1);
-	if (rc < 0) {
-		pr_err("Error in writing peek mux1, rc=%d\n", rc);
-		return rc;
-	}
-
-	mutex_lock(&chip->sram_rw_lock);
-	for (i = 0; i < BCL_RESET_RETRY_COUNT; i++) {
 	mutex_lock(&chip->sram_rw_lock);
 	for (i = 0; i < BCL_RESET_RETRY_COUNT; i++) {
 		pr_err("FG_BCL_RESET RETRY\n");
@@ -4086,8 +4076,6 @@ static int fg_bcl_reset(struct fg_chip *chip)
 			pr_err("Error in reading rdback, rc=%d\n", rc);
 			goto release_mem;
 		}
-
-		if (val & PEEK_MUX1_BIT) {
 		pr_err("FG_BCL_RESET VAL = %d\n",val);
 		if (val & PEEK_MUX1_BIT) {
 			pr_err("FG_BCL_RESET DEBUG\n");
@@ -4101,8 +4089,6 @@ static int fg_bcl_reset(struct fg_chip *chip)
 
 			rc = fg_dma_mem_req(chip, false);
 			if (rc < 0)
-				pr_err("Error in unlocking memory, rc=%d\n",
-						rc);
 				pr_err("Error in unlocking memory, rc=%d\n", rc);
 
 			/* Delay of 2ms */
@@ -4119,9 +4105,6 @@ static int fg_bcl_reset(struct fg_chip *chip)
 		} else {
 			rc = fg_dma_mem_req(chip, false);
 			if (rc < 0) {
-				pr_err("Error in unlocking memory, rc=%d\n",
-						rc);
-				goto unlock;
 				pr_err("Error in unlocking memory, rc=%d\n", rc);
 				return rc;
 			}
@@ -4151,7 +4134,6 @@ unlock:
 	else
 		return rc;
 }
-
 #endif
 static int fg_psy_set_property(struct power_supply *psy,
 				  enum power_supply_property psp,
@@ -4222,6 +4204,9 @@ static int fg_psy_set_property(struct power_supply *psy,
 		if (rc < 0)
 			pr_err("Error in saving learned_cc_uah, rc=%d\n", rc);
 		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
+		chip->cl.nom_cap_uah = pval->intval;
+		break;
 	case POWER_SUPPLY_PROP_COLD_TEMP:
 		rc = fg_set_jeita_threshold(chip, JEITA_COLD, pval->intval);
 		if (rc < 0) {
@@ -4250,13 +4235,6 @@ static int fg_psy_set_property(struct power_supply *psy,
 			return rc;
 		}
 		break;
-	case POWER_SUPPLY_PROP_FG_RESET_CLOCK:
-		rc = fg_bcl_reset(chip);
-		if (rc < 0) {
-			pr_err("Error in resetting BCL clock, rc=%d\n", rc);
-			return rc;
-		}
-		break;
 	default:
 		break;
 	}
@@ -4276,6 +4254,7 @@ static int fg_property_is_writeable(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_FG_RESET_CLOCK:
 #endif
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
+	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
 	case POWER_SUPPLY_PROP_COLD_TEMP:
 	case POWER_SUPPLY_PROP_COOL_TEMP:
 	case POWER_SUPPLY_PROP_WARM_TEMP:
@@ -4357,7 +4336,6 @@ static enum power_supply_property fg_psy_props[] = {
 	POWER_SUPPLY_PROP_CONSTANT_CHARGE_VOLTAGE,
 	POWER_SUPPLY_PROP_CC_STEP,
 	POWER_SUPPLY_PROP_CC_STEP_SEL,
-	POWER_SUPPLY_PROP_FG_RESET_CLOCK,
 #if defined(CONFIG_KERNEL_CUSTOM_E7T)
 	POWER_SUPPLY_PROP_FG_RESET_CLOCK,
 #endif
@@ -5751,12 +5729,14 @@ static int fg_gen3_probe(struct platform_device *pdev)
 	/* Keep BATT_MISSING_IRQ disabled until we require it */
 	vote(chip->batt_miss_irq_en_votable, BATT_MISS_IRQ_VOTER, false, 0);
 
+#ifdef CONFIG_DEBUG_FS
 	rc = fg_debugfs_create(chip);
 	if (rc < 0) {
 		dev_err(chip->dev, "Error in creating debugfs entries, rc:%d\n",
 			rc);
 		goto exit;
 	}
+#endif
 
 	rc = fg_get_battery_voltage(chip, &volt_uv);
 	if (!rc)
