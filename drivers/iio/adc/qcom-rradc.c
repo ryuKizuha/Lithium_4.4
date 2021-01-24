@@ -1,5 +1,4 @@
 /*
- * Copyright (c) 2016-2017, 2020, The Linux Foundation. All rights reserved.
  * Copyright (c) 2016-2017, The Linux Foundation. All rights reserved.
  * Copyright (C) 2019 XiaoMi, Inc.
  *
@@ -195,8 +194,6 @@
 #define FG_RR_ADC_STS_CHANNEL_READING_MASK	0x3
 #define FG_RR_ADC_STS_CHANNEL_STS		0x2
 
-#define FG_RR_CONV_CONTINUOUS_TIME_MIN_MS       50
-#define FG_RR_CONV_CONT_CBK_TIME_MIN_MS	10
 #define FG_RR_CONV_CONT_CBK_TIME_MIN_MS	10
 #define FG_RR_CONV_CONTINUOUS_TIME_MIN_MS	50
 #define FG_RR_CONV_MAX_RETRY_CNT		50
@@ -704,14 +701,6 @@ if (!chip->batt_psy)
 	if (!chip->batt_psy)
 		return false;
 
-static bool rradc_is_batt_psy_available(struct rradc_chip *chip)
-{
-	if (!chip->batt_psy)
-		chip->batt_psy = power_supply_get_by_name("battery");
-
-	if (!chip->batt_psy)
-		return false;
-
 	return true;
 }
 
@@ -725,7 +714,6 @@ static bool rradc_is_bms_psy_available(struct rradc_chip *chip)
 
 	return true;
 }
-
 #endif
 static int rradc_enable_continuous_mode(struct rradc_chip *chip)
 {
@@ -796,8 +784,6 @@ static int rradc_check_status_ready_with_retry(struct rradc_chip *chip,
 		struct rradc_chan_prop *prop, u8 *buf, u16 status)
 {
 	int rc = 0, retry_cnt = 0, mask = 0;
-	union power_supply_propval pval = {0, };
-
 #if defined(CONFIG_KERNEL_CUSTOM_E7T)
 	union power_supply_propval pval = {0, };
 #endif
@@ -826,11 +812,7 @@ static int rradc_check_status_ready_with_retry(struct rradc_chip *chip,
 			break;
 		}
 
-		if ((chip->conv_cbk) && (prop->channel == RR_ADC_USBIN_V))
-			msleep(FG_RR_CONV_CONT_CBK_TIME_MIN_MS);
-		else
-			msleep(FG_RR_CONV_CONTINUOUS_TIME_MIN_MS);
-
+		msleep(FG_RR_CONV_CONTINUOUS_TIME_MIN_MS);
 		retry_cnt++;
 		rc = rradc_read(chip, status, buf, 1);
 		if (rc < 0) {
@@ -838,7 +820,6 @@ static int rradc_check_status_ready_with_retry(struct rradc_chip *chip,
 			return rc;
 		}
 	}
-
 #if defined(CONFIG_KERNEL_CUSTOM_E7T)
 	if ((retry_cnt >= FG_RR_CONV_MAX_RETRY_CNT) &&
 		((prop->channel != RR_ADC_DCIN_V) ||
@@ -860,7 +841,6 @@ static int rradc_check_status_ready_with_retry(struct rradc_chip *chip,
 		if (retry_cnt >= FG_RR_CONV_MAX_RETRY_CNT)
 			rc = -ENODATA;
 	}
-
 #endif
 	return rc;
 }
@@ -1153,49 +1133,12 @@ static void psy_notify_work(struct work_struct *work)
 	struct rradc_chip *chip = container_of(work,
 			struct rradc_chip, psy_notify_work);
 
-static void psy_notify_work(struct work_struct *work)
-{
-	struct rradc_chip *chip = container_of(work,
-			struct rradc_chip, psy_notify_work);
-
 	struct rradc_chan_prop *prop;
 	union power_supply_propval pval = {0, };
 	u16 adc_code;
 	int rc = 0;
 
 	if (rradc_is_batt_psy_available(chip)) {
-		rc = power_supply_get_property(chip->batt_psy,
-			POWER_SUPPLY_PROP_STATUS, &pval);
-		if (rc < 0)
-			pr_err("Error obtaining battery status, rc=%d\n", rc);
-
-		if (pval.intval == POWER_SUPPLY_STATUS_CHARGING) {
-			chip->conv_cbk = true;
-			prop = &chip->chan_props[RR_ADC_USBIN_V];
-			rc = rradc_do_conversion(chip, prop, &adc_code);
-			if (rc == -ENODATA) {
-				pr_err("rradc is hung, Proceed to recovery\n");
-				if (rradc_is_bms_psy_available(chip)) {
-					rc = power_supply_set_property
-						(chip->bms_psy,
-						POWER_SUPPLY_PROP_FG_RESET_CLOCK,
-						&pval);
-					if (rc < 0)
-						pr_err("Couldn't reset FG clock rc=%d\n",
-								rc);
-					prop = &chip->chan_props[RR_ADC_BATT_ID];
-					rc = rradc_do_conversion(chip, prop,
-							&adc_code);
-					if (rc == -ENODATA)
-						pr_err("RRADC read failed after reset");
-				} else {
-					pr_err("Error obtaining bms power supply");
-				}
-			}
-		}
-	} else {
-		pr_err("Error obtaining battery power supply");
-	}
 			rc = power_supply_get_property(chip->batt_psy,
 				POWER_SUPPLY_PROP_STATUS, &pval);
 			if (rc < 0) {
@@ -1242,7 +1185,6 @@ static int rradc_psy_notifier_cb(struct notifier_block *nb,
 
 	return NOTIFY_OK;
 }
-
 #endif
 static const struct iio_info rradc_info = {
 	.read_raw	= &rradc_read_raw,
@@ -1368,20 +1310,6 @@ static int rradc_probe(struct platform_device *pdev)
 	chip->usb_trig = power_supply_get_by_name("usb");
 	if (!chip->usb_trig)
 		pr_debug("Error obtaining usb power supply\n");
-
-	chip->batt_psy = power_supply_get_by_name("battery");
-	if (!chip->batt_psy)
-		pr_debug("Error obtaining battery power supply\n");
-
-	chip->bms_psy = power_supply_get_by_name("bms");
-	if (!chip->bms_psy)
-		pr_debug("Error obtaining bms power supply\n");
-
-	chip->nb.notifier_call = rradc_psy_notifier_cb;
-	rc = power_supply_reg_notifier(&chip->nb);
-	if (rc < 0)
-		pr_err("Error registering psy notifier rc = %d\n", rc);
-	INIT_WORK(&chip->psy_notify_work, psy_notify_work);
 
 	return devm_iio_device_register(dev, indio_dev);
 }
