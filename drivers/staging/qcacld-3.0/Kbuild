@@ -1478,9 +1478,6 @@ endif
 ifeq ($(CONFIG_WLAN_FEATURE_GMAC),y)
 CDEFINES += -DWLAN_FEATURE_GMAC
 endif
-#cppflags-$(CONFIG_WLAN_POWER_DEBUG) += -DWLAN_POWER_DEBUG
-
-#cppflags-$(CONFIG_WLAN_MWS_INFO_DEBUGFS) += -DWLAN_MWS_INFO_DEBUGFS
 
 ifeq ($(CONFIG_WLAN_FEATURE_SAE),y)
 CDEFINES += -DWLAN_FEATURE_SAE
@@ -2020,56 +2017,6 @@ cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DWLAN_DFS_FULL_OFFLOAD
 else
 cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DWLAN_DFS_PARTIAL_OFFLOAD
 endif
-cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DDFS_COMPONENT_ENABLE
-cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DQCA_DFS_USE_POLICY_MANAGER
-cppflags-$(CONFIG_WLAN_DFS_MASTER_ENABLE) += -DQCA_DFS_NOL_PLATFORM_DRV_SUPPORT
-
-#cppflags-$(CONFIG_WLAN_DEBUGFS) += -DWLAN_DEBUGFS
-cppflags-$(CONFIG_WLAN_STREAMFS) += -DWLAN_STREAMFS
-
-cppflags-$(CONFIG_DYNAMIC_DEBUG) += -DFEATURE_MULTICAST_HOST_FW_MSGS
-
-cppflags-$(CONFIG_ENABLE_SMMU_S1_TRANSLATION) += -DENABLE_SMMU_S1_TRANSLATION
-
-#Flag to enable/disable MTRACE feature
-cppflags-$(CONFIG_ENABLE_MTRACE_LOG) += -DENABLE_MTRACE_LOG
-
-#Flag to enable/disable Adaptive 11r feature
-cppflags-$(CONFIG_ADAPTIVE_11R) += -DWLAN_ADAPTIVE_11R
-
-#Flag to enable/disable sae single pmk feature feature
-cppflags-$(CONFIG_SAE_SINGLE_PMK) += -DWLAN_SAE_SINGLE_PMK
-
-#Flag to enable NUD tracking
-cppflags-$(CONFIG_WLAN_NUD_TRACKING) += -DWLAN_NUD_TRACKING
-
-#Flag to enable set and get disable channel list feature
-cppflags-$(CONFIG_DISABLE_CHANNEL_LIST) += -DDISABLE_CHANNEL_LIST
-
-#Flag to enable/disable WIPS feature
-cppflags-$(CONFIG_WLAN_BCN_RECV_FEATURE) += -DWLAN_BCN_RECV_FEATURE
-
-#Flag to enable/disable thermal mitigation
-cppflags-$(CONFIG_FW_THERMAL_THROTTLE) += -DFW_THERMAL_THROTTLE
-
-#Flag to enable/disable LTE COEX support
-cppflags-$(CONFIG_LTE_COEX) += -DLTE_COEX
-
-#Flag to enable/disable HOST_OPCLASS
-cppflags-$(CONFIG_HOST_OPCLASS) += -DHOST_OPCLASS
-cppflags-$(CONFIG_HOST_OPCLASS) += -DHOST_OPCLASS_EXT
-
-#Flag to enable/disable TARGET_11D_SCAN
-cppflags-$(CONFIG_TARGET_11D_SCAN) += -DTARGET_11D_SCAN
-
-#Flag to enable/disable avoid acs frequency list feature
-cppflags-$(CONFIG_SAP_AVOID_ACS_FREQ_LIST) += -DSAP_AVOID_ACS_FREQ_LIST
-
-#Flag to enable Dynamic Voltage WDCVS (Config Voltage Mode)
-cppflags-$(CONFIG_WLAN_DYNAMIC_CVM) += -DFEATURE_WLAN_DYNAMIC_CVM
-
-#Flag to enable get firmware state feature
-cppflags-$(CONFIG_QCACLD_FEATURE_FW_STATE) += -DFEATURE_FW_STATE
 
 ifeq ($(CONFIG_ATH_PCIE_ACCESS_DEBUG), 1)
 CDEFINES += -DCONFIG_ATH_PCIE_ACCESS_DEBUG
