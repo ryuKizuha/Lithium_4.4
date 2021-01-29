@@ -1473,6 +1473,7 @@ static int fg_load_learned_cap_from_sram(struct fg_chip *chip)
 	}
 
 	chip->cl.learned_cc_uah = act_cap_mah * 1000;
+	chip->cl.learned_cc_uah = (chip->cl.learned_cc_uah > 4000000) ? chip->cl.learned_cc_uah : 4000000;
 
 	if (chip->cl.learned_cc_uah != chip->cl.nom_cap_uah) {
 		if (chip->cl.learned_cc_uah == 0)
@@ -1962,7 +1963,9 @@ static int fg_charge_full_update(struct fg_chip *chip)
 		msoc, bsoc, chip->health, chip->charge_status,
 		chip->charge_full);
 	if (chip->charge_done && !chip->charge_full) {
-		if (msoc >= 99 && chip->health == POWER_SUPPLY_HEALTH_GOOD) {
+		if (msoc >= 99 && (chip->health == POWER_SUPPLY_HEALTH_GOOD
+				|| chip->health == POWER_SUPPLY_HEALTH_COOL
+				|| chip->health == POWER_SUPPLY_HEALTH_WARM)) {
 			fg_dbg(chip, FG_STATUS, "Setting charge_full to true\n");
 			chip->charge_full = true;
 			/*
@@ -3426,8 +3429,13 @@ static int fg_get_time_to_full_locked(struct fg_chip *chip, int *val)
 	vbatt_avg /= MILLI_UNIT;
 
 	/* clamp ibatt_avg to iterm */
-	if (ibatt_avg < abs(chip->dt.sys_term_curr_ma))
-		ibatt_avg = abs(chip->dt.sys_term_curr_ma);
+	if ((msoc > 70) && (msoc <= 90)) {
+		if (ibatt_avg < 1000)
+			ibatt_avg = 1000; /* force consistent minumum charging current 1000mA upto 90% battery */
+	} else {
+		if (ibatt_avg < abs(chip->dt.sys_term_curr_ma))
+			ibatt_avg = abs(chip->dt.sys_term_curr_ma);
+	}
 
 	fg_dbg(chip, FG_TTF, "ibatt_avg=%d\n", ibatt_avg);
 	fg_dbg(chip, FG_TTF, "vbatt_avg=%d\n", vbatt_avg);
