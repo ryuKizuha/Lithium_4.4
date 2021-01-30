@@ -20,7 +20,7 @@ make_build(){
 				CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 	else
 		export CROSS_COMPILE=$(pwd)/gcc/bin/aarch64-elf- \
-                export CROSS_COMPILE_ARM32=$(pwd)/gcc+/bin/arm-linux-androideabi-
+                export CROSS_COMPILE_ARM32=$(pwd)/gcc+/bin/arm-eabi-
 		make O=out ARCH=arm64 $1
 		make -j$(nproc --all) O=out ARCH=arm64
 	fi
@@ -81,8 +81,8 @@ gen_toolchain(){
 	then
 		git clone --depth=1 https://github.com/Haseo97/Avalon-Clang-11.0.5 clang
 	else
-		git clone --depth=1 https://github.com/GrowtopiaJaw/aarch64-linux-android-4.9 gcc -b linaro
-                git clone --depth=1 https://github.com/theradcolor/arm-linux-androideabi-4.9 gcc+
+		git clone --depth=1 https://github.com/chips-project/aarch64-elf -b 11.0.0 gcc
+                git clone --depth=1 https://github.com/chips-project/arm-eabi -b 11.0.0 gcc+
 	fi
 	git clone --depth=1 https://github.com/ryuKizuha/zipper -b lithium anykernel
 }
