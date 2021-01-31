@@ -25,7 +25,7 @@ do
 
 	build ${i} -oldcam
 
-        build ${i} -newcam
+	build ${i} -newcam
 
 done
 
