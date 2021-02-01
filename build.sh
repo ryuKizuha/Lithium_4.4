@@ -3,6 +3,7 @@
 export KERNELNAME=Lithium
 
 export LOCALVERSION=typeE+
+export LOCALVERSION=~Testing~
 
 export KBUILD_BUILD_USER=zRyu
 
@@ -21,14 +22,14 @@ send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for ${DEVICES}.
 START=$(date +"%s")
 
 for i in ${DEVICES//,/ }
-do 
+do
 
 	build ${i} -oldcam
 
-        build ${i} -newcam
+	build ${i} -newcam
 
 done
 
 END=$(date +"%s")
- 
+
 DIFF=$(( END - START ))
