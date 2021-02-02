@@ -20,7 +20,7 @@ send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for ${DEVICES}.
 
 START=$(date +"%s")
 
-for i in ${DEVICES//,/ }
+for i in ${DEVICES}
 do
 
 	build ${i} -oldcam
