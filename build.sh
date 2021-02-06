@@ -2,7 +2,7 @@
 
 export KERNELNAME=Lithium
 
-export LOCALVERSION=TypeF
+export LOCALVERSION=XXX
 
 export KBUILD_BUILD_USER=zRyu
 
