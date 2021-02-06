@@ -19,9 +19,7 @@ gen_toolchain
 send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for lavender,jasmine,wayne..."
 
 send_psn "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for lavender,jasmine,wayne..."
-send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for EAS lavender,wayne,jasmine..."
 
-send_mes " lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for EAS lavender,wayne,jasmine. . ."
 START=$(date +"%s")
 
 for i in ${DEVICES}

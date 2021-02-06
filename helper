@@ -106,9 +106,6 @@ build(){
 		make_build "-li-old_defconfig"
 	else
 		make_build "-li-new_defconfig"
-		make_build "lavender-li-old_defconfig" "a26x-li-old_defconfig"
-	else
-		make_build "lavender-li-new_defconfig" "a26x-li-new_defconfig"
 	fi
 		mkzip "$KERNELNAME-$LOCALVERSION-${1}${2}${3}-$DATE.zip"
 }
