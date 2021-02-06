@@ -10,13 +10,15 @@ export KBUILD_BUILD_HOST=#FunProject
 
 export TOOLCHAIN=gcc
 
-export DEVICES=lavender
+export DEVICES=lavender,a26x
 
 source helper
 
 gen_toolchain
 
-send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for ${DEVICES}..."
+send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for lavender,jasmine,wayne..."
+
+send_psn "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for lavender,jasmine,wayne..."
 
 START=$(date +"%s")
 
@@ -32,3 +34,9 @@ done
 END=$(date +"%s")
 
 DIFF=$(( END - START ))
+
+
+send_msg "✅ Build completed in $((DIFF / 60))m $((DIFF % 60))s
+
+
+send_psn "✅ Build completed in $((DIFF / 60))m $((DIFF % 60))s

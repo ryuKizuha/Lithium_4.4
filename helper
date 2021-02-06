@@ -38,6 +38,14 @@ send_msg(){
 		-d text="${1}"
 }
 
+send_psn(){
+        print "${1}" green
+        curl -s -X POST https://api.telegram.org/bot"${bot_token}"/sendMessage \
+                -d parse_mode="Markdown" \
+                -d chat_id="${chat_id}" \
+                -d text="${1}"
+}
+
 send_file(){
 	print "Sending file..." green
 	curl -F chat_id="${chat_id}" \
@@ -95,9 +103,9 @@ build(){
 
 	if [ $2 == "-oldcam" ]
 	then
-		make_build "lavender-li-old_defconfig"
+		make_build "-li-old_defconfig"
 	else
-		make_build "lavender-li-new_defconfig"
+		make_build "-li-new_defconfig"
 	fi
 		mkzip "$KERNELNAME-$LOCALVERSION-${1}${2}${3}-$DATE.zip"
 }
