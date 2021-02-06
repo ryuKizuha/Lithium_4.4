@@ -41,7 +41,7 @@ send_msg(){
 send_file(){
 	print "Sending file..." green
 	curl -F chat_id="${chat_id}" \
-		-F caption="✅ Build succesfully! | DEVICE: ${type} | SHA1 : $(sha1sum ${file} | awk '{ print $1 }')" \
+		-F caption="✅ Beres boss! | DEVICE: ${type} | SHA1 : $(sha1sum ${file} | awk '{ print $1 }')" \
 		-F document=@"${1}" \
 		 https://api.telegram.org/bot"${bot_token}"/sendDocument
 }
@@ -95,9 +95,9 @@ build(){
 
 	if [ $2 == "-oldcam" ]
 	then
-		make_build "lavender-li-old_defconfig"
+		make_build "lavender-li-old_defconfig" "a26x-li-old_defconfig"
 	else
-		make_build "lavender-li-new_defconfig"
+		make_build "lavender-li-new_defconfig" "a26x-li-new_defconfig"
 	fi
 		mkzip "$KERNELNAME-$LOCALVERSION-${1}${2}${3}-$DATE.zip"
 }

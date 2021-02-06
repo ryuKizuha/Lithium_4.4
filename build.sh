@@ -10,14 +10,15 @@ export KBUILD_BUILD_HOST=#FunProject
 
 export TOOLCHAIN=gcc
 
-export DEVICES=lavender
+export DEVICES=lavender,a26x
 
 source helper
 
 gen_toolchain
 
-send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for ${DEVICES}..."
+send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for EAS lavender,wayne,jasmine..."
 
+send_mes " lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for EAS lavender,wayne,jasmine. . ."
 START=$(date +"%s")
 
 for i in ${DEVICES}
