@@ -778,7 +778,7 @@ static int mdss_dsi_panel_power_ctrl(struct mdss_panel_data *pdata,
 			}
 			ret = mdss_dsi_panel_power_on(pdata);
 		}
-#endif
+
 #ifdef CONFIG_STATE_NOTIFIER
 		state_resume();
 #endif
