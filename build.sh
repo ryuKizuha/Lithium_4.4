@@ -10,7 +10,7 @@ export KBUILD_BUILD_HOST=#FunProject
 
 export TOOLCHAIN=gcc
 
-export DEVICES=lavender
+export DEVICES=a26x
 
 source helper
 

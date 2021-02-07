@@ -95,9 +95,9 @@ build(){
 
 	if [ $2 == "-oldcam" ]
 	then
-		make_build "lavender-li-old_defconfig"
+		make_build "a26x-li-old_defconfig"
 	else
-		make_build "lavender-li-new_defconfig"
+		make_build "a26x-li-new_defconfig"
 	fi
 		mkzip "$KERNELNAME-$LOCALVERSION-${1}${2}${3}-$DATE.zip"
 }
