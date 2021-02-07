@@ -38,5 +38,4 @@ DIFF=$(( END - START ))
 
 send_msg "✅ Build completed in $((DIFF / 60))m $((DIFF % 60))s
 
-
 send_psn "✅ Build completed in $((DIFF / 60))m $((DIFF % 60))s
