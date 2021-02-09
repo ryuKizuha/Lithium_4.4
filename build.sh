@@ -3,6 +3,7 @@
 export KERNELNAME=Lithium
 
 export LOCALVERSION=typeF+
+export LOCALVERSION=XXX
 
 export KBUILD_BUILD_USER=zRyu
 
@@ -16,7 +17,7 @@ source helper
 
 gen_toolchain
 
-send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for ${DEVICES}..."
+send_msg "⏳ lagi build kernelnya ${KERNELNAME} ${LOCALVERSION} for lavender,jasmine,wayne..."
 
 START=$(date +"%s")
 

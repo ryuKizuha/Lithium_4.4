@@ -81,8 +81,8 @@ gen_toolchain(){
 	then
 		git clone --depth=1 https://github.com/Haseo97/Avalon-Clang-11.0.5 clang
 	else
-		git clone --depth=1 https://github.com/chips-project/aarch64-elf -b 11.0.0 gcc
-                git clone --depth=1 https://github.com/chips-project/arm-eabi -b 11.0.0 gcc+
+		git clone --depth=1 https://github.com/mvaisakh/gcc-arm64  -b gcc-master gcc
+                git clone --depth=1 https://github.com/mvaisakh/gcc-arm -b gcc-master gcc+
 	fi
 	git clone --depth=1 https://github.com/ryuKizuha/zipper -b lithium anykernel
 }
