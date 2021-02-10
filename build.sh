@@ -29,6 +29,9 @@ do
 
 done
 
-END=$(date +"%s")
+DATE_END=$(date +"%s")
 
-DIFF=$(( END - START ))
+DIFF=$(($DATE_END - $DATE_START))
+
+echo "Time: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds."
+echo
