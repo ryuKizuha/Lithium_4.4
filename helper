@@ -49,10 +49,8 @@ send_file(){
 mkzip(){
 	print "Generate zip file..." green
 
-	if [ -f $(pwd)/out/arch/arm64/boot/Image.gz
-		$(pwd)/out/arch/arm64/boot/dts/qcom/sdm660-mtp_f7a.dtb]; then
-		cp $(pwd)/out/arch/arm64/boot/dts/qcom/sdm660-mtp_f7a.dtb anykernel
-		cp $(pwd)/out/arch/arm64/boot/Image.gz  anykernel
+	if [ -f $(pwd)/out/arch/arm64/boot/Image.gz-dtb ]; then
+		cp $(pwd)/out/arch/arm64/boot/Image.gz-dtb  anykernel
 		cd anykernel
 		zip -r9 ../$1 * -x .git README.md *placeholder
 		cd ..
