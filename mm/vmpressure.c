@@ -383,7 +383,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg,
 	if (order > PAGE_ALLOC_COSTLY_ORDER)
 		return;
 
-	__vmpressure(gfp, memcg, false, scanned, reclaimed);
+	vmpressure(gfp, memcg, false, scanned, reclaimed);
 }
 
 /**
