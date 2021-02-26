@@ -36,6 +36,8 @@
 	chosen {
 		stdout-path = "serial0";
 		bootargs = "rcupdate.rcu_normal_after_boot=1 quiet audit=0 noirqdebug";
+		bootargs = "rcupdate.rcu_normal_after_boot=1 quiet noirqdebug";
+		bootargs = "rcupdate.rcu_normal_after_boot=1";
 	};
 
 	psci {
@@ -57,7 +59,6 @@
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			qcom,ea = <&ea0>;
 			efficiency = <1024>;
-			capacity-dmips-mhz = <1024>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
 			next-level-cache = <&L2_0>;
 			L2_0: l2-cache {
@@ -89,7 +90,6 @@
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			qcom,ea = <&ea1>;
 			efficiency = <1024>;
-			capacity-dmips-mhz = <1024>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
 			next-level-cache = <&L2_0>;
 			L1_I_1: l1-icache {
@@ -115,7 +115,6 @@
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			qcom,ea = <&ea2>;
 			efficiency = <1024>;
-			capacity-dmips-mhz = <1024>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
 			next-level-cache = <&L2_0>;
 			L1_I_2: l1-icache {
@@ -141,7 +140,6 @@
 			qcom,lmh-dcvs = <&lmh_dcvs0>;
 			qcom,ea = <&ea3>;
 			efficiency = <1024>;
-			capacity-dmips-mhz = <1024>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
 			next-level-cache = <&L2_0>;
 			L1_I_3: l1-icache {
@@ -320,6 +318,23 @@
 			>;
 			idle-cost-data = <
 				20 16 10 8
+	
+	energy_costs: energy-costs {
+		compatible = "sched-energy";
+
+		CPU_COST_0: core-cost0 {
+			busy-cost-data = <
+			633600 21
+			902400 35
+			1113600 52
+			1401600 86
+			1536000 120
+			1612800 131
+			1747200 175
+			1843200 199
+			>;
+			idle-cost-data = <
+				20 16 12 8
 			>;
 		};
 		CPU_COST_1: core-cost1 {
@@ -331,6 +346,13 @@
 				1958400  958
 				2208000 1080
 				2457600 1202
+			1113600 1339
+			1401600 2099
+			1747200 3710
+			1804800 4010
+			1958400 5293
+			2150400 6820
+			2208000 7514
 			>;
 			idle-cost-data = <
 				100 80 60 40
@@ -346,6 +368,14 @@
 				1536000 35
 				1612800 39
 				1843200 44
+			633600 7
+			902400 11
+			1113600 17
+			1401600 27
+			1536000 38
+			1612800 39
+			1747200 49
+			1843200 57
 			>;
 			idle-cost-data = <
 				4 3 2 1
@@ -365,7 +395,19 @@
 					4 3 2 1
 				>;
 			};
+			1113600 101
+			1401600 144
+			1747200 211
+			1804800 225
+			1958400 293
+			2150400 384
+			2208000 422
+			>;
+			idle-cost-data = <
+				4 3 2 1
+			>;
 		};
+	};
 
 	clocks {
 		xo_board {
