@@ -35,7 +35,7 @@
 
 	chosen {
 		stdout-path = "serial0";
-		bootargs = "rcupdate.rcu_normal_after_boot=1 quiet noirqdebug";
+		bootargs = "rcupdate.rcu_normal_after_boot=1";
 	};
 
 	psci {
@@ -157,7 +157,7 @@
 			device_type = "cpu";
 			compatible = "arm,kryo";
 			reg = <0x0 0x100>;
-			clock-frequency = <2208000000>;
+			clock-frequency = <2457600000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile1>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
@@ -186,7 +186,7 @@
 			device_type = "cpu";
 			compatible = "arm,kryo";
 			reg = <0x0 0x101>;
-			clock-frequency = <2208000000>;
+			clock-frequency = <2457600000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile2>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
@@ -211,7 +211,7 @@
 			device_type = "cpu";
 			compatible = "arm,kryo";
 			reg = <0x0 0x102>;
-			clock-frequency = <2208000000>;
+			clock-frequency = <2457600000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile3>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
@@ -236,7 +236,7 @@
 			device_type = "cpu";
 			compatible = "arm,kryo";
 			reg = <0x0 0x103>;
-			clock-frequency = <2208000000>;
+			clock-frequency = <2457600000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile4>;
 			qcom,lmh-dcvs = <&lmh_dcvs1>;
@@ -321,8 +321,8 @@
 			1747200 3710
 			1804800 4010
 			1958400 5293
-			2150400 6820
-			2208000 7514
+			2208000 6820
+			2457600 7514
 			>;
 			idle-cost-data = <
 				100 80 60 40
@@ -350,8 +350,8 @@
 			1747200 211
 			1804800 225
 			1958400 293
-			2150400 384
-			2208000 422
+			2208000 384
+			2457600 422
 			>;
 			idle-cost-data = <
 				4 3 2 1
@@ -1330,8 +1330,9 @@
 		qcom,core-dev-table =
 			< 1113600 762 >,
 			< 1401600 3879 >,
-			< 2150400 5931 >,
-			< 2208000 6881 >;
+			< 1958400 5931 >,
+			< 2208000 6880 >,
+			< 2457600 6881 >;
 	};
 
 	devfreq_cpufreq: devfreq-cpufreq {
@@ -1344,9 +1345,10 @@
 			cpu-to-dev-map-4 =
 				< 1113600 762 >,
 				< 1401600 2086 >,
+				< 1958400 5931 >,
 				< 1747200 2929 >,
-				< 2150400 3879 >,
-				< 2208000 6881 >;
+			    < 2208000 6880 >,
+			    < 2457600 6881 >;
 		};
 	};
 
@@ -1394,6 +1396,7 @@
 			<  1401600000 0x04040049 0x073a003a 0x2 5 >,
 			<  1536000000 0x04040050 0x08400040 0x2 6 >,
 			<  1612800000 0x04040054 0x09430043 0x2 7 >;
+			<  1843200000 0x04040060 0x094c004c 0x3 8 >;
 
 		qcom,pwrcl-speedbin4-v0 =
 			<   300000000 0x0004000f 0x01200020 0x1 1 >,
@@ -1405,37 +1408,32 @@
 			<  1747200000 0x0404005b 0x09480048 0x2 7 >,
 			<  1843200000 0x04040060 0x094c004c 0x3 8 >;
 
-		qcom,perfcl-speedbin0-v0 =
-			<   300000000 0x0004000f 0x01200020 0x1 1 >,
-			<  1113600000 0x0404003a 0x052e002e 0x1 2 >,
-			<  1401600000 0x04040049 0x073a003a 0x2 3 >,
-			<  1747200000 0x0404005b 0x09480048 0x2 4 >,
-			<  1958400000 0x04040066 0x0a510051 0x2 5 >,
-			<  2150400000 0x04040070 0x0b590059 0x2 6 >,
-			<  2457600000 0x04040080 0x0c660066 0x3 7 >;
-
 		qcom,perfcl-speedbin1-v0 =
 			<   300000000 0x0004000f 0x01200020 0x1 1 >,
 			<  1113600000 0x0404003a 0x052e002e 0x1 2 >,
 			<  1401600000 0x04040049 0x073a003a 0x2 3 >,
 			<  1747200000 0x0404005b 0x09480048 0x2 4 >,
 			<  1958400000 0x04040066 0x0a510051 0x2 5 >,
-			<  2150400000 0x04040070 0x0b590059 0x2 6 >,
-			<  2208000000 0x04040073 0x0b5c005c 0x3 7 >;
+			<  2208000000 0x04040073 0x0b5c005c 0x3 6 >,
+			<  2457600000 0x04040080 0x0c660066 0x3 7 >;
 
 		qcom,perfcl-speedbin3-v0 =
 			<   300000000 0x0004000f 0x01200020 0x1 1 >,
 			<  1113600000 0x0404003a 0x052e002e 0x1 2 >,
 			<  1401600000 0x04040049 0x073a003a 0x2 3 >,
 			<  1747200000 0x0404005b 0x09480048 0x2 4 >,
-			<  1804800000 0x0404005e 0x094b004b 0x2 5 >;
+			<  1958400000 0x04040066 0x0a510051 0x2 5 >,
+			<  2208000000 0x04040073 0x0b5c005c 0x3 6 >,
+			<  2457600000 0x04040080 0x0c660066 0x3 7 >;
 
 		qcom,perfcl-speedbin4-v0 =
 			<   300000000 0x0004000f 0x01200020 0x1 1 >,
 			<  1113600000 0x0404003a 0x052e002e 0x1 2 >,
 			<  1401600000 0x04040049 0x073a003a 0x2 3 >,
 			<  1747200000 0x0404005b 0x09480048 0x2 4 >,
-			<  1958400000 0x04040066 0x0a510051 0x2 5 >;
+			<  1958400000 0x04040066 0x0a510051 0x2 5 >,
+			<  2208000000 0x04040073 0x0b5c005c 0x3 6 >,
+			<  2457600000 0x04040080 0x0c660066 0x3 7 >;
 
 		qcom,up-timer = <1000 1000>;
 		qcom,down-timer = <1000 1000>;
